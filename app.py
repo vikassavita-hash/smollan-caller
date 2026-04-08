@@ -1,12 +1,15 @@
+import os
 from flask import Flask, request, Response
 import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
 
+BASE_URL = os.environ.get("BASE_URL", "https://smollan-caller.onrender.com")
+
 @app.route("/answer", methods=["POST", "GET"])
 def answer():
-    xml = """<?xml version="1.0" encoding="UTF-8"?>
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Speak voice="WOMAN" language="hi-IN">
         Namaste! Main Smollan ki taraf se bol rahi hoon.
@@ -15,7 +18,7 @@ def answer():
         Leave ke liye 2 dabayein.
     </Speak>
     <Gather numDigits="1" timeout="10"
-            action="/response" method="POST">
+            action="{BASE_URL}/response" method="POST">
     </Gather>
     <Speak voice="WOMAN" language="hi-IN">
         Koi response nahi mila. Dhanyawad.
@@ -28,9 +31,9 @@ def answer():
 def handle_response():
     digit     = request.form.get("Digits", "")
     call_uuid = request.form.get("CallUUID", "")
-    
-    print(f"Response: {digit} — Call: {call_uuid}")
-    
+
+    print(f"Digit: {digit} — UUID: {call_uuid}")
+
     if digit == "1":
         status = "PRESENT"
         msg    = "Shukriya! Aapki attendance mark ho gayi. Acha din ho!"
@@ -40,9 +43,9 @@ def handle_response():
     else:
         status = "UNCLEAR"
         msg    = "Invalid input. Dhanyawad."
-    
+
     log_result(call_uuid, status)
-    
+
     xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Speak voice="WOMAN" language="hi-IN">
